@@ -78,3 +78,47 @@ begin
 end;
 $$;
 
+
+--Task 4 — Trigger: Update Order Total
+create or replace function fnc_recalculat_total_amound()
+returns trigger
+language plpgsql
+as
+$$
+begin
+	update orders
+	set total_amount = calculate_order_total(coalesce(new.order_id, old.order_id))
+-- coalesce тут для того щоб вибирав не null, бо при ibsert існує тільки new,при update both, при delete тільки old
+	where order_id = coalesce(new.order_id, old.order_id);
+	return null;
+end;
+$$;
+
+create or replace trigger trg_recalculat_total_amound
+after insert or update or delete
+on order_items
+for each row
+execute function fnc_recalculat_total_amound();
+
+
+
+--Task 5 — Trigger: Order Audit Log
+
+create or replace function fnc_order_audit_log()
+returns trigger
+language plpgsql
+as
+$$
+begin
+	insert into order_log(order_id, customer_id, action, log_date)
+	values (new.order_id, new.customer_id, 'created', current_timestamp);
+	return null;
+end;
+$$;
+
+
+create or replace trigger trg_order_audit_log
+after insert
+on orders
+for each row
+execute function fnc_order_audit_log();
