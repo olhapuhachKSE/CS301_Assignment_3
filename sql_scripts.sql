@@ -122,3 +122,63 @@ after insert
 on orders
 for each row
 execute function fnc_order_audit_log();
+
+
+
+--Task 6 — Testing
+
+--1)customers can be created;
+insert into customers (full_name, email, balance)
+values ('Puhach Olha', 'puhach.olha@kse', 1780);
+select*
+from customers;
+-- прицює в таблиці з'явився новий кастомер
+
+
+--2)products can be created;
+insert into products(product_name, price, stock_quantity)
+values ('iphone', 47000, 100);
+
+select*
+from products;
+-- працює в таблиці з'явився новий продукт
+
+
+--3)orders can be created using the procedure;
+call create_order(1);
+select*
+from orders;
+-- додає замовлення з поточним часом
+
+
+--4)products can be added to orders using the procedure;
+call add_product_to_order(1,2,4);
+select*
+from order_items;
+-- спрацбовує і додає  в order_items нове з ціною попереднього
+
+
+--5) order totals are updated automatically;
+
+SELECT order_id, total_amount
+FROM orders
+where order_id = 1 ;
+-- так після зміни oreder_items oreder total перерахувалось автоматино
+
+--6) product stock decreases correctly;
+
+select product_name, stock_quantity
+from products;
+-- перевірили скільки було до
+call add_product_to_order(1, 1, 2);
+-- додаємо в замовлення щоб кількість змінилась
+select product_name, stock_quantity
+from products;
+-- перевірили так кількість змінилась було 9 стало 7
+
+
+--7)order creation is logged in order_log.
+select*
+from order_log;
+-- так після перевірки створення замовлення в таблицю додалися значення
+
